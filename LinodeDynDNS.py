@@ -10,15 +10,25 @@
 #
 #   python --version
 #
+import configparser
 import sys
+import os.path
 if "--help" in sys.argv:
 	print("Usage: ./LinodeDynDNS.py [ --debug ] [ --noop ] [ --help ]")
-	print("  --help           show this help and exit")
-	print("  --noop           only show what WOULD have happened")
-	print("  --debug          show responses (for troubleshooting)")
+	print("  --help                show this help and exit")
+	print("  --noop                only show what WOULD have happened")
+	print("  --debug               show responses (for troubleshooting)")
 	print("")
 	print("Contains directions in the script (which you'll have to edit anyway).")
+	print("Default config file: ~/.linode-dns.conf")
 	exit(0)
+
+config = configparser.ConfigParser()
+if os.path.exists(os.path.expanduser("~/.linode-dns.conf")):
+	config.read(os.path.expanduser("~/.linode-dns.conf"))
+	default_domain = config['DEFAULT']['default_domain']
+	domain_config = config[default_domain]
+
 #
 # To use:
 #
@@ -168,7 +178,7 @@ def main():
 			print("OK {0} -> {1}".format(old, public))
 			return 1
 		else:
-			print("OK")
+			print("OK (nothing to do)")
 			return 0
 	except Exception as excp:
 		print("FAIL {0}: {1}".format(type(excp).__name__, excp))
