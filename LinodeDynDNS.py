@@ -14,20 +14,20 @@ import configparser
 import sys
 import os.path
 if "--help" in sys.argv:
-	print("Usage: ./LinodeDynDNS.py [ --debug ] [ --noop ] [ --help ]")
-	print("  --help                show this help and exit")
-	print("  --noop                only show what WOULD have happened")
-	print("  --debug               show responses (for troubleshooting)")
-	print("")
-	print("Contains directions in the script (which you'll have to edit anyway).")
-	print("Default config file: ~/.linode-dns.conf")
-	exit(0)
+        print("Usage: ./LinodeDynDNS.py [ --debug ] [ --noop ] [ --help ]")
+        print("  --help                show this help and exit")
+        print("  --noop                only show what WOULD have happened")
+        print("  --debug               show responses (for troubleshooting)")
+        print("")
+        print("Contains directions in the script (which you'll have to edit anyway).")
+        print("Default config file: ~/.linode-dns.conf")
+        exit(0)
 
 config = configparser.ConfigParser()
 if os.path.exists(os.path.expanduser("~/.linode-dns.conf")):
-	config.read(os.path.expanduser("~/.linode-dns.conf"))
-	default_domain = config['DEFAULT']['default_domain']
-	domain_config = config[default_domain]
+        config.read(os.path.expanduser("~/.linode-dns.conf"))
+        default_domain = config['DEFAULT']['default_domain']
+        domain_config = config[default_domain]
 
 #
 # To use:
@@ -117,72 +117,72 @@ else:
 # STOP EDITING HERE #
 
 try:
-	from json import load
-	from urllib.parse import urlencode
-	from urllib.request import urlretrieve
+        from json import load
+        from urllib.parse import urlencode
+        from urllib.request import urlretrieve
 except Exception as excp:
-	exit("Couldn't import the standard library. Are you running Python 3?")
+        exit("Couldn't import the standard library. Are you running Python 3?")
 
 def execute(action, parameters):
-	# Execute a query and return a Python dictionary.
-	uri = "{0}&action={1}".format(API.format(KEY), action)
-	if parameters and len(parameters) > 0:
-		uri = "{0}&{1}".format(uri, urlencode(parameters))
-	if DEBUG:
-		print("-->", uri)
-	file, headers = urlretrieve(uri)
-	if DEBUG:
-		print("<--", file)
-		print(headers, end="")
-		print(open(file).read())
-		print()
-	json = load(open(file), encoding="utf-8")
-	if len(json["ERRORARRAY"]) > 0:
-		err = json["ERRORARRAY"][0]
-		raise Exception("Error {0}: {1}".format(int(err["ERRORCODE"]),
-			err["ERRORMESSAGE"]))
-	return load(open(file), encoding="utf-8")
+        # Execute a query and return a Python dictionary.
+        uri = "{0}&action={1}".format(API.format(KEY), action)
+        if parameters and len(parameters) > 0:
+                uri = "{0}&{1}".format(uri, urlencode(parameters))
+        if DEBUG:
+                print("-->", uri)
+        file, headers = urlretrieve(uri)
+        if DEBUG:
+                print("<--", file)
+                print(headers, end="")
+                print(open(file).read())
+                print()
+        json = load(open(file), encoding="utf-8")
+        if len(json["ERRORARRAY"]) > 0:
+                err = json["ERRORARRAY"][0]
+                raise Exception("Error {0}: {1}".format(int(err["ERRORCODE"]),
+                        err["ERRORMESSAGE"]))
+        return load(open(file), encoding="utf-8")
 
 def ip():
-	if DEBUG:
-		print("-->", GETIP)
-	file, headers = urlretrieve(GETIP)
-	if DEBUG:
-		print("<--", file)
-		print(headers, end="")
-		print(open(file).read())
-		print()
-	return open(file).read().strip()
+        if DEBUG:
+                print("-->", GETIP)
+        file, headers = urlretrieve(GETIP)
+        if DEBUG:
+                print("<--", file)
+                print(headers, end="")
+                print(open(file).read())
+                print()
+        return open(file).read().strip()
 
 def main():
-	try:
-		res = execute("domainResourceGet", {"ResourceID": RESOURCE,
-						    "DomainID": DOMAINID})["DATA"]
-		if(len(res)) == 0:
-			raise Exception("No such resource?".format(RESOURCE))
-		public = ip()
-		if res[0]["TARGET"] != public:
-			old = res[0]["TARGET"]
-			request = {
-				"ResourceID": res[0]["RESOURCEID"],
-				"DomainID": res[0]["DOMAINID"],
-				"Name": res[0]["NAME"],
-				"Type": res[0]["TYPE"],
-				"Target": public,
-				"TTL_Sec": res[0]["TTL_SEC"]
-			}
-			if "--noop" in sys.argv:
-				print("Would have updated: {0} -> {1}".format(old, public))
-				return 0
-			execute("domainResourceSave", request)
-			print("OK {0} -> {1}".format(old, public))
-			return 1
-		else:
-			print("OK (nothing to do)")
-			return 0
-	except Exception as excp:
-		print("FAIL {0}: {1}".format(type(excp).__name__, excp))
-		return 2
+        try:
+                res = execute("domainResourceGet", {"ResourceID": RESOURCE,
+                                                    "DomainID": DOMAINID})["DATA"]
+                if(len(res)) == 0:
+                        raise Exception("No such resource?".format(RESOURCE))
+                public = ip()
+                if res[0]["TARGET"] != public:
+                        old = res[0]["TARGET"]
+                        request = {
+                                "ResourceID": res[0]["RESOURCEID"],
+                                "DomainID": res[0]["DOMAINID"],
+                                "Name": res[0]["NAME"],
+                                "Type": res[0]["TYPE"],
+                                "Target": public,
+                                "TTL_Sec": res[0]["TTL_SEC"]
+                        }
+                        if "--noop" in sys.argv:
+                                print("Would have updated: {0} -> {1}".format(old, public))
+                                return 0
+                        execute("domainResourceSave", request)
+                        print("OK {0} -> {1}".format(old, public))
+                        return 1
+                else:
+                        print("OK (nothing to do)")
+                        return 0
+        except Exception as excp:
+                print("FAIL {0}: {1}".format(type(excp).__name__, excp))
+                return 2
 
 if __name__ == "__main__":
-	exit(main())
+        exit(main())
