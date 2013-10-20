@@ -91,7 +91,7 @@ else:
 if 'getip' in domain_config:
 	GETIP = domain_config['getip']
 else:
-	GETIP = "http://hosted.jedsmith.org/ip.php"
+	GETIP = "http://wtfismyip.com/text"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
