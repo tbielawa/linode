@@ -1,4 +1,4 @@
-#!/usr/bin/python3.1
+#!/usr/bin/python3
 #
 # Easy Python3 Dynamic DNS
 # By Jed Smith <jed@jedsmith.org> 4/29/2009
@@ -28,7 +28,8 @@ if os.path.exists(os.path.expanduser("~/.linode-dns.conf")):
         config.read(os.path.expanduser("~/.linode-dns.conf"))
         default_domain = config['DEFAULT']['default_domain']
         domain_config = config[default_domain]
-
+else:
+	domain_config = {}
 #
 # To use:
 #
@@ -53,7 +54,10 @@ if os.path.exists(os.path.expanduser("~/.linode-dns.conf")):
 #                                                                    ^
 # You want 123456. The API key MUST have write access to this resource ID.
 #
-RESOURCE = "000000"
+if 'resource' in domain_config:
+	RESOURCE = domain_config['resource']
+else:
+	RESOURCE = "000000"
 #
 # The DomainID of the domain you want to update. Unlike the resource
 # id, you can't get this from looking at query parameters the web
@@ -63,12 +67,18 @@ RESOURCE = "000000"
 #     | python -m json.tool \
 #     | grep DOMAIN
 #
-DOMAINID = "000000"
+if 'domainid' in domain_config:
+	DOMAINID = domain_config['domainid']
+else:
+	DOMAINID = "000000"
 #
 # Your Linode API key.  You can generate this by going to your profile in the
 # Linode manager.  It should be fairly long.
 #
-KEY = "abcdefghijklmnopqrstuvwxyz"
+if 'key' in domain_config:
+	KEY = domain_config['key']
+else:
+	KEY = "abcdefghijklmnopqrstuvwxyz"
 #
 # The URI of a Web service that returns your IP address as plaintext.  You are
 # welcome to leave this at the default value and use mine.  If you want to run
@@ -78,13 +88,19 @@ KEY = "abcdefghijklmnopqrstuvwxyz"
 #     header("Content-type: text/plain");
 #     printf("%s", $_SERVER["REMOTE_ADDR"]);
 #
-GETIP = "http://hosted.jedsmith.org/ip.php"
+if 'getip' in domain_config:
+	GETIP = domain_config['getip']
+else:
+	GETIP = "http://hosted.jedsmith.org/ip.php"
 #
 # If for some reason the API URI changes, or you wish to send requests to a
 # different URI for debugging reasons, edit this.  {0} will be replaced with the
 # API key set above, and & will be added automatically for parameters.
 #
-API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
+if 'api' in domain_config:
+	API = domain_config['api']
+else:
+	API = "https://api.linode.com/api/?api_key={0}&resultFormat=JSON"
 #
 # Comment or remove this line to indicate that you edited the options above.
 #
