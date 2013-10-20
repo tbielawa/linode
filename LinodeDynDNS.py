@@ -2,12 +2,23 @@
 #
 # Easy Python3 Dynamic DNS
 # By Jed Smith <jed@jedsmith.org> 4/29/2009
+# Updated by Tim Bielawa <tbielawa@redhat.com> 10/20/2013
 # This code and associated documentation is released into the public domain.
 #
 # This script **REQUIRES** Python 3.0 or above.  Python 2.6 may work.
 # To see what version you are using, run this:
 #
 #   python --version
+#
+import sys
+if "--help" in sys.argv:
+	print("Usage: ./LinodeDynDNS.py [ --debug ] [ --noop ] [ --help ]")
+	print("  --help           show this help and exit")
+	print("  --noop           only show what WOULD have happened")
+	print("  --debug          show responses (for troubleshooting)")
+	print("")
+	print("Contains directions in the script (which you'll have to edit anyway).")
+	exit(0)
 #
 # To use:
 #
@@ -33,6 +44,16 @@
 # You want 123456. The API key MUST have write access to this resource ID.
 #
 RESOURCE = "000000"
+#
+# The DomainID of the domain you want to update. Unlike the resource
+# id, you can't get this from looking at query parameters the web
+# interface. To get my DomainID I used curl and ran this command:
+#
+#   curl -s "https://api.linode.com/?api_key=${LINODE_API_KEY}&api_action=domain.list" \
+#     | python -m json.tool \
+#     | grep DOMAIN
+#
+DOMAINID = "000000"
 #
 # Your Linode API key.  You can generate this by going to your profile in the
 # Linode manager.  It should be fairly long.
@@ -76,7 +97,10 @@ exit("Did you edit the options?  vi this file open.")
 #
 # If you want to see responses for troubleshooting, set this:
 #
-DEBUG = False
+if "--debug" in sys.argv:
+        DEBUG = True
+else:
+        DEBUG = False
 
 
 #####################
@@ -122,20 +146,24 @@ def ip():
 
 def main():
 	try:
-		res = execute("domainResourceGet", {"ResourceID": RESOURCE})["DATA"]
+		res = execute("domainResourceGet", {"ResourceID": RESOURCE,
+						    "DomainID": DOMAINID})["DATA"]
 		if(len(res)) == 0:
 			raise Exception("No such resource?".format(RESOURCE))
 		public = ip()
-		if res["TARGET"] != public:
-			old = res["TARGET"]
+		if res[0]["TARGET"] != public:
+			old = res[0]["TARGET"]
 			request = {
-				"ResourceID": res["RESOURCEID"],
-				"DomainID": res["DOMAINID"],
-				"Name": res["NAME"],
-				"Type": res["TYPE"],
+				"ResourceID": res[0]["RESOURCEID"],
+				"DomainID": res[0]["DOMAINID"],
+				"Name": res[0]["NAME"],
+				"Type": res[0]["TYPE"],
 				"Target": public,
-				"TTL_Sec": res["TTL_SEC"]
+				"TTL_Sec": res[0]["TTL_SEC"]
 			}
+			if "--noop" in sys.argv:
+				print("Would have updated: {0} -> {1}".format(old, public))
+				return 0
 			execute("domainResourceSave", request)
 			print("OK {0} -> {1}".format(old, public))
 			return 1
